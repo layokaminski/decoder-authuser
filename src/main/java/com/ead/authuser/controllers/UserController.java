@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -34,6 +36,11 @@ public class UserController {
             Pageable pageable
     ) {
         Page<UserModel> userModelPage = userService.findAll(pageable);
+        if (!userModelPage.isEmpty()) {
+            for (UserModel user: userModelPage.toList()) {
+                user.add(linkTo(methodOn(UserController.class).getUserById(user.getUserId())).withSelfRel());
+            }
+        }
         return ResponseEntity.status(HttpStatus.OK).body(userModelPage);
     }
 
