@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserModel> findAll(Pageable pageable, Specification<UserModel> spec) {
+    public Page<UserModel> findAll(Specification<UserModel> spec, Pageable pageable) {
         return userRepository.findAll(spec, pageable);
     }
 }
