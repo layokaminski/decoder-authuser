@@ -7,7 +7,7 @@ spring:
   application:
     name: ead-authuser-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/ead-authuser
+    url: jdbc:postgresql://localhost:5432/ead-authuser-v2
     username: postgres
     password: postgres
   jpa:
@@ -22,6 +22,8 @@ spring:
   output:
     ansi:
       enabled: Always
+  rabbitmq:
+    addresses: amqps://ciwikdah:UeDf50JLhCuHnKRp4fJ-yyWqF5myd-CO@toad.rmq.cloudamqp.com/ciwikdah
 
 logging:
   level:
@@ -34,6 +36,9 @@ ead:
   api:
     url:
       course: 'http://ead-course-service/ead-course/'
+  broker:
+    exchange:
+      userEvent: ead.userevent
 
 eureka:
   client:
