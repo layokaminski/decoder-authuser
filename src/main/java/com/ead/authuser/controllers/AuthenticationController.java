@@ -1,9 +1,12 @@
 package com.ead.authuser.controllers;
 
 import com.ead.authuser.DTOs.UserDTO;
+import com.ead.authuser.enums.RoleType;
 import com.ead.authuser.enums.UserStatus;
 import com.ead.authuser.enums.UserType;
+import com.ead.authuser.models.RoleModel;
 import com.ead.authuser.models.UserModel;
+import com.ead.authuser.services.RoleService;
 import com.ead.authuser.services.UserService;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.extern.log4j.Log4j2;
@@ -13,6 +16,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +31,12 @@ public class AuthenticationController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private RoleService roleService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/signup")
     public ResponseEntity<Object> registerUser(
@@ -52,13 +62,18 @@ public class AuthenticationController {
                     .body("Error: Email is Already Taken!");
         }
 
+        RoleModel roleModel = roleService.findByRoleType(RoleType.ROLE_STUDENT)
+                        .orElseThrow(() -> new RuntimeException("Error: Role is Not Found."));
+
+        userDTO.setPassword(passwordEncoder.encode((userDTO.getPassword())));
+
         BeanUtils.copyProperties(userDTO, userModel);
         userModel.setUserStatus(UserStatus.ACTIVE);
         userModel.setUserType(UserType.STUDENT);
         userModel.setCreationDate(LocalDateTime.now(ZoneId.of("UTC-3")));
         userModel.setLastUpdateDate(LocalDateTime.now(ZoneId.of("UTC-3")));
+        userModel.getRoles().add(roleModel);
         userService.saveUserAndPublish(userModel);
-
 
         log.debug("POST registerUser userId saved {} ", userModel.getUserId());
         log.info("User saved successfully userId {} ", userModel.getUserId());

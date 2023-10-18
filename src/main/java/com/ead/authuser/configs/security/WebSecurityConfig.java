@@ -1,7 +1,9 @@
 package com.ead.authuser.configs.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,28 +17,34 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private AuthenticationEntryPointImpl authenticationEntryPoint;
+
     private static final String[] AUTH_WHITELIST = {
-            "/ead-authuser/auth/**"
+            "/auth/**"
     };
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.httpBasic()
+                .authenticationEntryPoint(authenticationEntryPoint)
                 .and()
                 .authorizeRequests()
                 .antMatchers(AUTH_WHITELIST).permitAll()
+                .antMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()
-                .csrf().disable()
-                .formLogin();
+                .csrf().disable();
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
-        authenticationManagerBuilder.inMemoryAuthentication()
-                .withUser("admin")
-                .password(passwordEncoder().encode("123456"))
-                .roles("ADMIN");
+        authenticationManagerBuilder
+                .userDetailsService(userDetailsService).
+                passwordEncoder(passwordEncoder());
     }
 
     @Bean
