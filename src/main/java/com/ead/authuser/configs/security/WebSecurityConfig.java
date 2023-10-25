@@ -10,8 +10,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,17 +30,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             "/auth/**"
     };
 
+    @Bean
+    public AuthenticationJWTFilter authenticationJWTFilter() {
+        return new AuthenticationJWTFilter();
+    }
+
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.httpBasic()
+        httpSecurity.exceptionHandling()
                 .authenticationEntryPoint(authenticationEntryPoint)
+                .and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
                 .antMatchers(AUTH_WHITELIST).permitAll()
-                .antMatchers(HttpMethod.GET, "/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
                 .and()
                 .csrf().disable();
+
+        httpSecurity.addFilterBefore(authenticationJWTFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override
