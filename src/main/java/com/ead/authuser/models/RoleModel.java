@@ -1,7 +1,6 @@
 package com.ead.authuser.models;
 
 import com.ead.authuser.enums.RoleType;
-import com.ead.authuser.enums.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
