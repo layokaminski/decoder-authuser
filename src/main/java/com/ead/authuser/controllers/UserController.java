@@ -41,7 +41,7 @@ public class UserController {
     @Autowired
     private AuthenticationCurrentUserService authenticationCurrentUserService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping
     public ResponseEntity<Page<UserModel>> getAllUsers(
             SpecificationTemplate.UserSpec spec,
