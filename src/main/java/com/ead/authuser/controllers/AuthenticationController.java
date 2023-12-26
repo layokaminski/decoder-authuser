@@ -92,6 +92,48 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userModel);
     }
 
+    @PostMapping("/signup/admin/usr")
+    public ResponseEntity<Object> registerUserAdmin(
+            @RequestBody
+            @Validated(UserDTO.UserView.RegistrationPost.class)
+            @JsonView(UserDTO.UserView.RegistrationPost.class)
+            UserDTO userDTO) {
+        log.debug("POST registerUser userDTO received {} ", userDTO.toString());
+
+        var userModel = new UserModel();
+
+        if (userService.existsByUsername(userDTO.getUsername())) {
+            log.warn("Username {} is Already Taken", userDTO.getUsername());
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Error: Username is Already Taken!");
+        }
+
+        if (userService.existsByEmail(userDTO.getEmail())) {
+            log.warn("Email {} is Already Taken", userDTO.getEmail());
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Error: Email is Already Taken!");
+        }
+
+        RoleModel roleModel = roleService.findByRoleType(RoleType.ROLE_ADMIN)
+                .orElseThrow(() -> new RuntimeException("Error: Role is Not Found."));
+
+        userDTO.setPassword(passwordEncoder.encode((userDTO.getPassword())));
+
+        BeanUtils.copyProperties(userDTO, userModel);
+        userModel.setUserStatus(UserStatus.ACTIVE);
+        userModel.setUserType(UserType.ADMIN);
+        userModel.setCreationDate(LocalDateTime.now(ZoneId.of("UTC-3")));
+        userModel.setLastUpdateDate(LocalDateTime.now(ZoneId.of("UTC-3")));
+        userModel.getRoles().add(roleModel);
+        userService.saveUserAndPublish(userModel);
+
+        log.debug("POST registerUser userId saved {} ", userModel.getUserId());
+        log.info("User saved successfully userId {} ", userModel.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(userModel);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<JwtDTO> authenticateUser(@Valid @RequestBody LoginDTO loginDTO) {
         Authentication authentication = authenticationManager.authenticate(
